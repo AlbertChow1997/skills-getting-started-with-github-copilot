@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
         const participantsList = details.participants.length > 0
-          ? `<ul>${details.participants.map(p => `<li>${p}</li>`).join("")}</ul>`
+          ? `<div class='participants-list'>${details.participants.map(p => `<div class='participant-item'><span>${p}</span><button class='delete-participant' data-activity='${name}' data-email='${p}' title='Remove participant'>✕</button></div>`).join("")}</div>`
           : "<p class='no-participants'>No participants yet</p>";
 
         activityCard.innerHTML = `
@@ -35,6 +35,33 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
         activitiesList.appendChild(activityCard);
+
+        // Add delete participant event listeners
+        const deleteButtons = activityCard.querySelectorAll(".delete-participant");
+        deleteButtons.forEach(button => {
+          button.addEventListener("click", async (e) => {
+            e.preventDefault();
+            const activity = button.getAttribute("data-activity");
+            const email = button.getAttribute("data-email");
+            
+            try {
+              const response = await fetch(
+                `/activities/${encodeURIComponent(activity)}/participants/${encodeURIComponent(email)}`,
+                { method: "DELETE" }
+              );
+              
+              if (response.ok) {
+                // Refresh activities list
+                fetchActivities();
+              } else {
+                const error = await response.json();
+                console.error("Error removing participant:", error);
+              }
+            } catch (error) {
+              console.error("Error removing participant:", error);
+            }
+          });
+        });
 
         // Add option to select dropdown
         const option = document.createElement("option");
